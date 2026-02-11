@@ -1,0 +1,14 @@
+torch
+transformers
+diffusers
+accelerate
+safetensors
+pillow
+numpy
+tqdm
+matplotlib
+einops
+xformers
+pyyaml
+
+pytest

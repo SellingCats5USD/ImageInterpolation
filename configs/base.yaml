@@ -1,0 +1,13 @@
+model: runwayml/stable-diffusion-v1-5
+prompt_a: an oil painting of people around a campfire
+prompt_b: an oil painting of an old man
+view_a: identity
+view_b: vflip
+steps: 50
+guidance: 7.5
+width: 512
+height: 512
+seed: 42
+dtype: fp16
+out: outputs/campfire_oldman.png
+out_grid: outputs/campfire_oldman_grid.png
