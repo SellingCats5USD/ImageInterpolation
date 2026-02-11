@@ -78,47 +78,6 @@ To use any custom model id directly:
 python -m src.run --preset none --model <hf_model_id> --model_family auto ...
 ```
 
-
-### 5) Generate 20+ images overnight (batch mode)
-
-Use the batch helper script to run many jobs sequentially:
-
-```bash
-python scripts/batch_run.py \
-  --count 20 \
-  --preset sdxl \
-  --steps 40 \
-  --guidance 6.5 \
-  --seed_start 1000 \
-  --auto_ideas 20 \
-  --out_dir outputs/overnight
-```
-
-Or paste your own prompt pairs into a text file with this format:
-
-```text
-prompt_a ||| prompt_b
-prompt_a ||| prompt_b
-```
-
-Example:
-
-```bash
-python scripts/batch_run.py \
-  --count 20 \
-  --prompt_file scripts/prompt_pairs_example.txt \
-  --preset juggernautxl \
-  --steps 40 \
-  --guidance 6.5 \
-  --width 1024 \
-  --height 1024 \
-  --out_dir outputs/overnight
-```
-
-The script saves both images per run:
-- `anagram_000.png`
-- `anagram_000_grid.png`
-
 ## Notes
 
 - Prefer `--dtype fp16` on GPU for lower VRAM.

@@ -72,39 +72,17 @@ def resolve_model(model: str | None, preset: str, model_family: str) -> tuple[st
     return model, model_family
 
 
-def _load_pipeline_with_fallback(pipeline_cls: type[DiffusionPipeline], model_id: str, dtype: torch.dtype, **kwargs: Any) -> DiffusionPipeline:
-    base_kwargs: dict[str, Any] = {
-        "torch_dtype": dtype,
-        "use_safetensors": True,
-        **kwargs,
-    }
-
-    try:
-        return pipeline_cls.from_pretrained(model_id, **base_kwargs)
-    except OSError as exc:
-        # Some community repos only ship fp16 component weights (`*.fp16.safetensors`).
-        # Diffusers requires `variant="fp16"` to pick those files.
-        if dtype != torch.float16:
-            raise
-        message = str(exc).lower()
-        if "safetensors" not in message:
-            raise
-        fallback_kwargs = {**base_kwargs, "variant": "fp16"}
-        return pipeline_cls.from_pretrained(model_id, **fallback_kwargs)
-
-
 def load_model(model_id: str, device: str, dtype: torch.dtype, model_family: str) -> ModelBundle:
     if model_family == "sdxl":
-        pipe = _load_pipeline_with_fallback(
-            StableDiffusionXLPipeline,
+        pipe = StableDiffusionXLPipeline.from_pretrained(
             model_id,
-            dtype,
+            torch_dtype=dtype,
+            use_safetensors=True,
         )
     elif model_family == "sd15":
-        pipe = _load_pipeline_with_fallback(
-            StableDiffusionPipeline,
+        pipe = StableDiffusionPipeline.from_pretrained(
             model_id,
-            dtype,
+            torch_dtype=dtype,
             safety_checker=None,
             requires_safety_checker=False,
         )
