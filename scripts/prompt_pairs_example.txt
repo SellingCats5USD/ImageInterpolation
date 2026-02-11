@@ -1,0 +1,6 @@
+# One pair per line, using: prompt_a ||| prompt_b
+an oil painting of a stormy lighthouse ||| an oil painting portrait of a retired sea captain
+a cinematic neon alley in the rain ||| a cinematic portrait of a masked violinist
+an enchanted forest with glowing mushrooms ||| a portrait of a woodland sorcerer with antlers
+a fantasy floating castle at sunset ||| a fantasy portrait of a dragon tamer
+a victorian train station at night ||| a victorian detective portrait with lantern light

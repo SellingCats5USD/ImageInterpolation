@@ -4,7 +4,7 @@ import argparse
 
 import torch
 
-from .model import build_text_embeddings, load_model
+from .model import MODEL_PRESETS, build_text_conditioning, load_model, resolve_model
 from .sampler import SampleConfig, sample_visual_anagram
 from .utils import make_generator, make_horizontal_grid, save_pil
 from .views import get_view
@@ -12,7 +12,9 @@ from .views import get_view
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate Visual Anagrams via multi-view denoising")
-    parser.add_argument("--model", default="runwayml/stable-diffusion-v1-5")
+    parser.add_argument("--preset", choices=list(MODEL_PRESETS.keys()) + ["none"], default="sd15")
+    parser.add_argument("--model", default=None, help="Override model id directly (use with --preset none).")
+    parser.add_argument("--model_family", choices=["auto", "sd15", "sdxl"], default="auto")
     parser.add_argument("--prompt_a", required=True)
     parser.add_argument("--prompt_b", required=True)
     parser.add_argument("--view_a", default="identity")
@@ -32,16 +34,24 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     dtype = torch.float16 if args.dtype == "fp16" else torch.float32
+    model_id, model_family = resolve_model(model=args.model, preset=args.preset, model_family=args.model_family)
 
     if args.device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA requested but torch.cuda.is_available() is False")
 
-    bundle = load_model(model_id=args.model, device=args.device, dtype=dtype)
+    bundle = load_model(model_id=model_id, device=args.device, dtype=dtype, model_family=model_family)
 
     prompts = [args.prompt_a, args.prompt_b]
     views = [get_view(args.view_a), get_view(args.view_b)]
 
-    uncond_emb, text_emb = build_text_embeddings(bundle.pipe, prompts, args.device)
+    conditioning = build_text_conditioning(
+        pipe=bundle.pipe,
+        prompts=prompts,
+        device=args.device,
+        model_family=bundle.model_family,
+        width=args.width,
+        height=args.height,
+    )
     generator = make_generator(args.seed, args.device)
 
     config = SampleConfig(
@@ -56,18 +66,21 @@ def main() -> None:
         scheduler=bundle.scheduler,
         views=views,
         prompts=prompts,
-        uncond_embeddings=uncond_emb,
-        text_embeddings=text_emb,
+        conditioning=conditioning,
         generator=generator,
         config=config,
     )
 
     save_pil(image, args.out)
-    grid = make_horizontal_grid([image, *transformed_views])
+    # `transformed_views` already includes the first view result; when view_a is identity
+    # that is the same orientation as `image`. Keep `image` and append only additional
+    # transformed views to avoid showing the normal orientation twice in the grid.
+    grid = make_horizontal_grid([image, *transformed_views[1:]])
     save_pil(grid, args.out_grid)
 
     print(f"Saved base image to {args.out}")
     print(f"Saved comparison grid to {args.out_grid}")
+    print(f"Model: {model_id} ({bundle.model_family})")
 
 
 if __name__ == "__main__":

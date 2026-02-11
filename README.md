@@ -38,7 +38,7 @@ bash scripts/smoke_test.sh
 
 ```bash
 python -m src.run \
-  --model runwayml/stable-diffusion-v1-5 \
+  --preset sd15 \
   --prompt_a "an oil painting of people around a campfire" \
   --prompt_b "an oil painting of an old man" \
   --view_a identity \
@@ -50,8 +50,78 @@ python -m src.run \
   --out_grid outputs/campfire_oldman_grid.png
 ```
 
+### 4) Switch to stronger modern models
+
+You can pick built-in presets without changing code:
+
+```bash
+# SDXL base 1.0 (modern architecture)
+python -m src.run \
+  --preset sdxl \
+  --prompt_a "a detailed ukiyo-e style owl" \
+  --prompt_b "a portrait photo of an astronaut" \
+  --view_a identity \
+  --view_b vflip
+```
+
+Available presets:
+
+- `sd15`: `runwayml/stable-diffusion-v1-5` (baseline)
+- `dreamshaper8`: `Lykon/dreamshaper-8` (strong SD1.5 fine-tune)
+- `realisticvision60`: `SG161222/Realistic_Vision_V6.0_B1_noVAE` (modern realistic SD1.5)
+- `sdxl`: `stabilityai/stable-diffusion-xl-base-1.0` (newer model family)
+- `juggernautxl`: `RunDiffusion/Juggernaut-XL-v9` (popular SDXL fine-tune)
+
+To use any custom model id directly:
+
+```bash
+python -m src.run --preset none --model <hf_model_id> --model_family auto ...
+```
+
+
+### 5) Generate 20+ images overnight (batch mode)
+
+Use the batch helper script to run many jobs sequentially:
+
+```bash
+python scripts/batch_run.py \
+  --count 20 \
+  --preset sdxl \
+  --steps 40 \
+  --guidance 6.5 \
+  --seed_start 1000 \
+  --auto_ideas 20 \
+  --out_dir outputs/overnight
+```
+
+Or paste your own prompt pairs into a text file with this format:
+
+```text
+prompt_a ||| prompt_b
+prompt_a ||| prompt_b
+```
+
+Example:
+
+```bash
+python scripts/batch_run.py \
+  --count 20 \
+  --prompt_file scripts/prompt_pairs_example.txt \
+  --preset juggernautxl \
+  --steps 40 \
+  --guidance 6.5 \
+  --width 1024 \
+  --height 1024 \
+  --out_dir outputs/overnight
+```
+
+The script saves both images per run:
+- `anagram_000.png`
+- `anagram_000_grid.png`
+
 ## Notes
 
 - Prefer `--dtype fp16` on GPU for lower VRAM.
 - Start with `512x512`, then experiment with prompts and seeds.
 - If one view dominates, reduce guidance or simplify prompts.
+- SDXL typically benefits from larger resolutions and often lower guidance than SD1.5.

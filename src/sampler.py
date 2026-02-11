@@ -3,12 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import torch
-from diffusers import StableDiffusionPipeline
+from diffusers import DiffusionPipeline
 from diffusers.schedulers.scheduling_ddim import DDIMScheduler
 from diffusers.utils.torch_utils import randn_tensor
 from PIL import Image
 from tqdm.auto import tqdm
 
+from .model import TextConditioning
 from .views import View
 
 
@@ -20,14 +21,33 @@ class SampleConfig:
     guidance_scale: float = 7.5
 
 
+
+
+def _decode_latents(pipe: DiffusionPipeline, latents: torch.Tensor) -> torch.Tensor:
+    latents_for_decode = latents / pipe.vae.config.scaling_factor
+
+    needs_upcast = bool(getattr(pipe.vae.config, "force_upcast", False)) and hasattr(pipe, "upcast_vae")
+    vae_restore_dtype: torch.dtype | None = None
+    if needs_upcast:
+        vae_restore_dtype = pipe.vae.dtype
+        pipe.upcast_vae()
+        latents_for_decode = latents_for_decode.to(pipe.vae.dtype)
+
+    decoded = pipe.vae.decode(latents_for_decode, return_dict=False)[0]
+
+    if needs_upcast and vae_restore_dtype is not None:
+        pipe.vae.to(dtype=vae_restore_dtype)
+
+    return decoded
+
+
 @torch.no_grad()
 def sample_visual_anagram(
-    pipe: StableDiffusionPipeline,
+    pipe: DiffusionPipeline,
     scheduler: DDIMScheduler,
     views: list[View],
     prompts: list[str],
-    uncond_embeddings: torch.Tensor,
-    text_embeddings: torch.Tensor,
+    conditioning: TextConditioning,
     generator: torch.Generator,
     config: SampleConfig,
 ) -> tuple[Image.Image, list[Image.Image]]:
@@ -53,15 +73,32 @@ def sample_visual_anagram(
             latent_view = view.forward(latents)
             scaled_input = scheduler.scale_model_input(latent_view, t)
 
-            eps_uncond = pipe.unet(scaled_input, t, encoder_hidden_states=uncond_embeddings[i : i + 1]).sample
-            eps_text = pipe.unet(scaled_input, t, encoder_hidden_states=text_embeddings[i : i + 1]).sample
+            unet_kwargs: dict[str, torch.Tensor] = {}
+            if conditioning.add_time_ids is not None:
+                unet_kwargs["added_cond_kwargs"] = {
+                    "text_embeds": conditioning.pooled_text_embeddings[i : i + 1],
+                    "time_ids": conditioning.add_time_ids[i : i + 1],
+                }
+
+            eps_uncond = pipe.unet(
+                scaled_input,
+                t,
+                encoder_hidden_states=conditioning.uncond_embeddings[i : i + 1],
+                **unet_kwargs,
+            ).sample
+            eps_text = pipe.unet(
+                scaled_input,
+                t,
+                encoder_hidden_states=conditioning.text_embeddings[i : i + 1],
+                **unet_kwargs,
+            ).sample
             eps_cfg = eps_uncond + config.guidance_scale * (eps_text - eps_uncond)
             aligned_predictions.append(view.inverse(eps_cfg))
 
         eps_tilde = torch.stack(aligned_predictions, dim=0).mean(dim=0)
         latents = scheduler.step(eps_tilde, t, latents).prev_sample
 
-    decoded = pipe.vae.decode(latents / pipe.vae.config.scaling_factor, return_dict=False)[0]
+    decoded = _decode_latents(pipe, latents)
     image = pipe.image_processor.postprocess(decoded, output_type="pil")[0]
 
     view_images: list[Image.Image] = []
