@@ -78,6 +78,27 @@ To use any custom model id directly:
 python -m src.run --preset none --model <hf_model_id> --model_family auto ...
 ```
 
+
+## Run this repo on Kaggle GPU (single codebase)
+
+To avoid splitting code between local VSCode and Kaggle notebooks, use Git as the single source of truth and pull the same branch into Kaggle GPU sessions.
+
+- Full setup guide: `docs/KAGGLE_VSCODE_SETUP.md`
+- Kaggle helper bootstrap script: `scripts/kaggle_bootstrap.sh`
+- Ready-to-run notebook template: `notebooks/kaggle_vscode_single_codebase.ipynb`
+
+Minimal Kaggle cell:
+
+```bash
+%%bash
+cd /kaggle/working
+git clone --branch <branch> https://github.com/<org>/<repo>.git ImageInterpolation
+cd ImageInterpolation
+REPO_URL="https://github.com/<org>/<repo>.git" BRANCH="<branch>" bash scripts/kaggle_bootstrap.sh
+```
+
+For VSCode ↔ Kaggle Jupyter Server connection details, follow Kaggle docs: https://www.kaggle.com/docs/notebooks#kaggle-jupyter-server
+
 ## Notes
 
 - Prefer `--dtype fp16` on GPU for lower VRAM.
