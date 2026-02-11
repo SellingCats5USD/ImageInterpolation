@@ -31,11 +31,8 @@ def _decode_latents(pipe: DiffusionPipeline, latents: torch.Tensor) -> torch.Ten
     if needs_upcast:
         vae_restore_dtype = pipe.vae.dtype
         pipe.upcast_vae()
+        latents_for_decode = latents_for_decode.to(pipe.vae.dtype)
 
-    # Match decode input dtype to the VAE conv weight dtype (more reliable than `pipe.vae.dtype`
-    # under some accelerate/device-map setups where module-level dtype metadata can lag).
-    decode_weight = pipe.vae.post_quant_conv.weight
-    latents_for_decode = latents_for_decode.to(dtype=decode_weight.dtype, device=decode_weight.device)
     decoded = pipe.vae.decode(latents_for_decode, return_dict=False)[0]
 
     if needs_upcast and vae_restore_dtype is not None:
