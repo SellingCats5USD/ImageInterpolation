@@ -3,12 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import torch
-from diffusers import StableDiffusionPipeline
+from diffusers import DiffusionPipeline
 from diffusers.schedulers.scheduling_ddim import DDIMScheduler
 from diffusers.utils.torch_utils import randn_tensor
 from PIL import Image
 from tqdm.auto import tqdm
 
+from .model import TextConditioning
 from .views import View
 
 
@@ -22,12 +23,11 @@ class SampleConfig:
 
 @torch.no_grad()
 def sample_visual_anagram(
-    pipe: StableDiffusionPipeline,
+    pipe: DiffusionPipeline,
     scheduler: DDIMScheduler,
     views: list[View],
     prompts: list[str],
-    uncond_embeddings: torch.Tensor,
-    text_embeddings: torch.Tensor,
+    conditioning: TextConditioning,
     generator: torch.Generator,
     config: SampleConfig,
 ) -> tuple[Image.Image, list[Image.Image]]:
@@ -53,8 +53,25 @@ def sample_visual_anagram(
             latent_view = view.forward(latents)
             scaled_input = scheduler.scale_model_input(latent_view, t)
 
-            eps_uncond = pipe.unet(scaled_input, t, encoder_hidden_states=uncond_embeddings[i : i + 1]).sample
-            eps_text = pipe.unet(scaled_input, t, encoder_hidden_states=text_embeddings[i : i + 1]).sample
+            unet_kwargs: dict[str, torch.Tensor] = {}
+            if conditioning.add_time_ids is not None:
+                unet_kwargs["added_cond_kwargs"] = {
+                    "text_embeds": conditioning.pooled_text_embeddings[i : i + 1],
+                    "time_ids": conditioning.add_time_ids[i : i + 1],
+                }
+
+            eps_uncond = pipe.unet(
+                scaled_input,
+                t,
+                encoder_hidden_states=conditioning.uncond_embeddings[i : i + 1],
+                **unet_kwargs,
+            ).sample
+            eps_text = pipe.unet(
+                scaled_input,
+                t,
+                encoder_hidden_states=conditioning.text_embeddings[i : i + 1],
+                **unet_kwargs,
+            ).sample
             eps_cfg = eps_uncond + config.guidance_scale * (eps_text - eps_uncond)
             aligned_predictions.append(view.inverse(eps_cfg))
 
