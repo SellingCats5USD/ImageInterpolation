@@ -21,6 +21,26 @@ class SampleConfig:
     guidance_scale: float = 7.5
 
 
+
+
+def _decode_latents(pipe: DiffusionPipeline, latents: torch.Tensor) -> torch.Tensor:
+    latents_for_decode = latents / pipe.vae.config.scaling_factor
+
+    needs_upcast = bool(getattr(pipe.vae.config, "force_upcast", False)) and hasattr(pipe, "upcast_vae")
+    vae_restore_dtype: torch.dtype | None = None
+    if needs_upcast:
+        vae_restore_dtype = pipe.vae.dtype
+        pipe.upcast_vae()
+        latents_for_decode = latents_for_decode.to(pipe.vae.dtype)
+
+    decoded = pipe.vae.decode(latents_for_decode, return_dict=False)[0]
+
+    if needs_upcast and vae_restore_dtype is not None:
+        pipe.vae.to(dtype=vae_restore_dtype)
+
+    return decoded
+
+
 @torch.no_grad()
 def sample_visual_anagram(
     pipe: DiffusionPipeline,
@@ -78,7 +98,7 @@ def sample_visual_anagram(
         eps_tilde = torch.stack(aligned_predictions, dim=0).mean(dim=0)
         latents = scheduler.step(eps_tilde, t, latents).prev_sample
 
-    decoded = pipe.vae.decode(latents / pipe.vae.config.scaling_factor, return_dict=False)[0]
+    decoded = _decode_latents(pipe, latents)
     image = pipe.image_processor.postprocess(decoded, output_type="pil")[0]
 
     view_images: list[Image.Image] = []
