@@ -35,8 +35,6 @@ The key point: every Kaggle run should start from a pushed branch/commit.
 
 Create a new Kaggle notebook with GPU enabled.
 
-> Prefer a ready-made notebook? Use `notebooks/kaggle_vscode_single_codebase.ipynb` and fill in your repo URL + branch in the marked cells.
-
 In the first cell, clone and bootstrap the same repo/branch:
 
 ```bash
@@ -152,17 +150,7 @@ Reference: Kaggle Jupyter server docs: https://www.kaggle.com/docs/notebooks#kag
 - Prefer branch names per experiment.
 - Save artifacts under `outputs/` and upload/download as needed.
 
-
-## 9) Where files are stored in Kaggle
-
-- Repo checkout: `/kaggle/working/ImageInterpolation` (or your `REPO_DIR_NAME`).
-- Virtualenv: `/kaggle/working/ImageInterpolation/.venv`.
-- Generated images/artifacts: `/kaggle/working/ImageInterpolation/outputs/` when using `--out outputs/...`.
-- Model weights/cache: Hugging Face default cache location in the Kaggle runtime unless you override cache env vars.
-
-`/kaggle/working` is writable during the session; persist anything important by downloading artifacts or saving a Kaggle Notebook/Output version.
-
-## 10) Troubleshooting
+## 9) Troubleshooting
 
 - **"Module not found" in Kaggle:** activate `.venv` and reinstall requirements.
 - **Model download auth errors:** ensure `HF_TOKEN` secret is set and valid.

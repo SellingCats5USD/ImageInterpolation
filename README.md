@@ -85,7 +85,6 @@ To avoid splitting code between local VSCode and Kaggle notebooks, use Git as th
 
 - Full setup guide: `docs/KAGGLE_VSCODE_SETUP.md`
 - Kaggle helper bootstrap script: `scripts/kaggle_bootstrap.sh`
-- Ready-to-run notebook template: `notebooks/kaggle_vscode_single_codebase.ipynb`
 
 Minimal Kaggle cell:
 
