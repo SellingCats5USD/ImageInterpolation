@@ -1,0 +1,1 @@
+"""Visual anagram generation package."""
