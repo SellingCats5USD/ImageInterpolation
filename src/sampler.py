@@ -31,9 +31,8 @@ def _decode_latents(pipe: DiffusionPipeline, latents: torch.Tensor) -> torch.Ten
     if needs_upcast:
         vae_restore_dtype = pipe.vae.dtype
         pipe.upcast_vae()
+        latents_for_decode = latents_for_decode.to(pipe.vae.dtype)
 
-    # Keep latent dtype aligned with VAE weights for both upcast and non-upcast paths.
-    latents_for_decode = latents_for_decode.to(pipe.vae.dtype)
     decoded = pipe.vae.decode(latents_for_decode, return_dict=False)[0]
 
     if needs_upcast and vae_restore_dtype is not None:

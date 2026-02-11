@@ -8,10 +8,8 @@ class _DummyVAE:
         self.config = type("Cfg", (), {"scaling_factor": 0.13025, "force_upcast": force_upcast})()
         self.dtype = torch.float16
         self.to_calls = []
-        self.last_decode_dtype = None
 
     def decode(self, latents, return_dict=False):
-        self.last_decode_dtype = latents.dtype
         return (latents,)
 
     def to(self, dtype):
@@ -50,12 +48,3 @@ def test_decode_latents_without_upcast_keeps_dtype() -> None:
     assert pipe.upcast_calls == 0
     assert pipe.vae.to_calls == []
     assert decoded.dtype == torch.float16
-
-
-def test_decode_latents_casts_input_to_vae_dtype_without_upcast() -> None:
-    pipe = _DummyPipe(force_upcast=False)
-    latents = torch.ones((1, 4, 2, 2), dtype=torch.float32)
-
-    _decode_latents(pipe, latents)
-
-    assert pipe.vae.last_decode_dtype == torch.float16
