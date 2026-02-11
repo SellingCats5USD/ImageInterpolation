@@ -86,7 +86,7 @@ Use the batch helper script to run many jobs sequentially:
 ```bash
 python scripts/batch_run.py \
   --count 20 \
-  --preset sdxl \
+  --preset dreamshaper8 \
   --steps 40 \
   --guidance 6.5 \
   --seed_start 1000 \
@@ -107,13 +107,15 @@ Example:
 python scripts/batch_run.py \
   --count 20 \
   --prompt_file scripts/prompt_pairs_example.txt \
-  --preset juggernautxl \
+  --preset dreamshaper8 \
   --steps 40 \
   --guidance 6.5 \
-  --width 1024 \
-  --height 1024 \
+  --width 512 \
+  --height 512 \
   --out_dir outputs/overnight
 ```
+
+Batch defaults are tuned for DreamShaper 8 (`--preset dreamshaper8`, `512x512`).
 
 The script saves both images per run:
 - `anagram_000.png`

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from scripts.batch_run import parse_prompt_file
+from scripts.batch_run import IDEA_PAIRS, parse_prompt_file
 
 
 def test_parse_prompt_file_accepts_valid_lines(tmp_path: Path) -> None:
@@ -29,3 +29,9 @@ def test_parse_prompt_file_rejects_missing_separator(tmp_path: Path) -> None:
         assert "missing '|||" in str(exc)
     else:
         raise AssertionError("Expected ValueError")
+
+
+def test_idea_pairs_match_requested_style_mix() -> None:
+    assert len(IDEA_PAIRS) == 50
+    non_oil = [pair for pair in IDEA_PAIRS if "oil painting" not in pair[0].lower() and "oil painting" not in pair[1].lower()]
+    assert len(non_oil) <= 10
