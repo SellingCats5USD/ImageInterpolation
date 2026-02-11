@@ -72,7 +72,10 @@ def main() -> None:
     )
 
     save_pil(image, args.out)
-    grid = make_horizontal_grid([image, *transformed_views])
+    # `transformed_views` already includes the first view result; when view_a is identity
+    # that is the same orientation as `image`. Keep `image` and append only additional
+    # transformed views to avoid showing the normal orientation twice in the grid.
+    grid = make_horizontal_grid([image, *transformed_views[1:]])
     save_pil(grid, args.out_grid)
 
     print(f"Saved base image to {args.out}")
