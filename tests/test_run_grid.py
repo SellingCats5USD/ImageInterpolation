@@ -33,8 +33,13 @@ def test_main_avoids_duplicate_identity_in_grid(monkeypatch) -> None:
         seed=1,
         device="cuda",
         dtype="fp16",
+        num_images=1,
         out="out.png",
         out_grid="grid.png",
+        batch_unet=True,
+        attention_slicing=False,
+        channels_last=False,
+        compile_unet=False,
     )
     monkeypatch.setattr(run_mod, "parse_args", lambda: args)
     monkeypatch.setattr(run_mod, "resolve_model", lambda **_: ("model", "sd15"))
