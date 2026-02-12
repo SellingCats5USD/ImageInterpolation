@@ -50,10 +50,12 @@ def _sample_sd_like(
 ) -> torch.Tensor:
     device = pipe._execution_device
     dtype = pipe.unet.dtype
+    batch_size = config.num_images
+    num_views = len(views)
 
     scheduler.set_timesteps(config.steps, device=device)
     latent_shape = (
-        1,
+        batch_size,
         pipe.unet.config.in_channels,
         config.height // pipe.vae_scale_factor,
         config.width // pipe.vae_scale_factor,
@@ -200,9 +202,7 @@ def sample_visual_anagram(
     decoded = _decode_latents(pipe, latents)
     image = pipe.image_processor.postprocess(decoded, output_type="pil")[0]
 
-    view_images: list[Image.Image] = []
-    for view in views:
-        transformed = view.forward(decoded)
-        view_images.append(pipe.image_processor.postprocess(transformed, output_type="pil")[0])
+    if config.num_images == 1:
+        return images[0], [imgs[0] for imgs in view_images]
 
-    return image, view_images
+    return images, view_images

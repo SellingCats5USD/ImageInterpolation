@@ -1,6 +1,7 @@
 import torch
 
-from src.model import _load_pipeline_with_fallback
+import src.model as model_mod
+from src.model import _load_pipeline_with_fallback, _load_sdxl_pipeline
 
 
 class _FakePipeline:

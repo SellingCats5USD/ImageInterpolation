@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 import torch
 
@@ -38,6 +39,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if args.num_images < 1:
+        raise ValueError("--num_images must be >= 1")
     dtype = torch.float16 if args.dtype == "fp16" else torch.float32
     model_id, model_family = resolve_model(model=args.model, preset=args.preset, model_family=args.model_family)
 
@@ -85,15 +88,30 @@ def main() -> None:
         config=config,
     )
 
-    save_pil(image, args.out)
-    # `transformed_views` already includes the first view result; when view_a is identity
-    # that is the same orientation as `image`. Keep `image` and append only additional
-    # transformed views to avoid showing the normal orientation twice in the grid.
-    grid = make_horizontal_grid([image, *transformed_views[1:]])
-    save_pil(grid, args.out_grid)
+    if args.num_images == 1:
+        save_pil(image, args.out)
+        # `transformed_views` already includes the first view result; when view_a is identity
+        # that is the same orientation as `image`. Keep `image` and append only additional
+        # transformed views to avoid showing the normal orientation twice in the grid.
+        grid = make_horizontal_grid([image, *transformed_views[1:]])
+        save_pil(grid, args.out_grid)
 
-    print(f"Saved base image to {args.out}")
-    print(f"Saved comparison grid to {args.out_grid}")
+        print(f"Saved base image to {args.out}")
+        print(f"Saved comparison grid to {args.out_grid}")
+    else:
+        out_path = Path(args.out)
+        out_grid_path = Path(args.out_grid)
+        for i, base_image in enumerate(image):
+            base_path = out_path.with_name(f"{out_path.stem}_{i:03d}{out_path.suffix}")
+            grid_path = out_grid_path.with_name(f"{out_grid_path.stem}_{i:03d}{out_grid_path.suffix}")
+
+            transformed_for_image = [view_images[i] for view_images in transformed_views]
+            save_pil(base_image, str(base_path))
+            grid = make_horizontal_grid([base_image, *transformed_for_image[1:]])
+            save_pil(grid, str(grid_path))
+
+            print(f"[{i + 1}/{args.num_images}] Saved base image to {base_path}")
+            print(f"[{i + 1}/{args.num_images}] Saved comparison grid to {grid_path}")
     print(f"Model: {model_id} ({bundle.model_family})")
 
 
