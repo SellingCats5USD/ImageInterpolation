@@ -13,6 +13,12 @@ def test_resolve_custom_model_auto_family() -> None:
     assert family == "sdxl"
 
 
+def test_resolve_flux_auto_family() -> None:
+    model_id, family = resolve_model(model="black-forest-labs/FLUX.1-schnell", preset="none", model_family="auto")
+    assert model_id == "black-forest-labs/FLUX.1-schnell"
+    assert family == "flux"
+
+
 def test_resolve_rejects_mismatched_family() -> None:
     try:
         resolve_model(model=None, preset="sdxl", model_family="sd15")
