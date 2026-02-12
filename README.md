@@ -71,8 +71,8 @@ Available presets:
 - `realisticvision60`: `SG161222/Realistic_Vision_V6.0_B1_noVAE` (modern realistic SD1.5)
 - `sdxl`: `stabilityai/stable-diffusion-xl-base-1.0` (newer model family)
 - `juggernautxl`: `RunDiffusion/Juggernaut-XL-v9` (popular SDXL fine-tune)
-- `juggernautxl_lightning`: `RunDiffusion/Juggernaut-XL-Lightning` (optimized for ~4-8 steps; includes single-file fallback loading)
-- `flux1_schnell`: `black-forest-labs/FLUX.1-schnell` (fast FLUX model, usually 1-4 steps; may require HF access approval/token)
+- `juggernautxl_lightning`: `RunDiffusion/Juggernaut-XL-Lightning` (optimized for ~4-8 steps)
+- `flux1_schnell`: `black-forest-labs/FLUX.1-schnell` (fast FLUX model, usually 1-4 steps)
 
 To use any custom model id directly:
 
@@ -89,7 +89,6 @@ This repo now includes several built-in speed knobs:
 - **`--compile_unet`** to use `torch.compile` for repeated runs.
 - **`--channels_last`** to use NHWC memory format on UNet (often faster on modern NVIDIA GPUs).
 - **`--attention_slicing`** for lower VRAM (usually slower, but helpful if memory-bound).
-- **`--num_images N`** to generate `N` images in one denoising batch (saved with `_000`, `_001`, ... suffixes).
 
 Example fast run (Juggernaut XL Lightning):
 
@@ -115,26 +114,6 @@ python -m src.run \
   --prompt_a "a neon origami dragon" \
   --prompt_b "a minimalist ceramic teapot"
 ```
-
-
-Batch example (4 images in one run):
-
-```bash
-python -m src.run \
-  --preset flux1_schnell \
-  --model_family flux \
-  --num_images 4 \
-  --steps 4 \
-  --guidance 1.0 \
-  --prompt_a "a neon origami dragon" \
-  --prompt_b "a minimalist ceramic teapot" \
-  --out /kaggle/working/visual_anagram.png \
-  --out_grid /kaggle/working/visual_anagram_grid.png
-```
-
-This produces:
-- `/kaggle/working/visual_anagram_000.png`, `/kaggle/working/visual_anagram_001.png`, ...
-- `/kaggle/working/visual_anagram_grid_000.png`, `/kaggle/working/visual_anagram_grid_001.png`, ...
 
 ## Run this repo on Kaggle GPU (single codebase)
 

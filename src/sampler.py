@@ -20,7 +20,6 @@ class SampleConfig:
     steps: int = 50
     guidance_scale: float = 7.5
     batch_unet: bool = True
-    num_images: int = 1
 
 
 def _decode_latents(pipe: DiffusionPipeline, latents: torch.Tensor) -> torch.Tensor:
@@ -70,17 +69,11 @@ def _sample_sd_like(
 
         if config.batch_unet:
             model_input = torch.cat([scaled_views, scaled_views], dim=0)
-            uncond = conditioning.uncond_embeddings.repeat_interleave(batch_size, dim=0)
-            text = conditioning.text_embeddings.repeat_interleave(batch_size, dim=0)
-            encoder_hidden_states = torch.cat([uncond, text], dim=0)
+            encoder_hidden_states = torch.cat([conditioning.uncond_embeddings, conditioning.text_embeddings], dim=0)
             unet_kwargs: dict[str, torch.Tensor | dict[str, torch.Tensor]] = {}
             if conditioning.add_time_ids is not None:
-                pooled_uncond = conditioning.uncond_pooled_embeddings.repeat_interleave(batch_size, dim=0)
-                pooled_text = conditioning.pooled_text_embeddings.repeat_interleave(batch_size, dim=0)
-                pooled = torch.cat([pooled_uncond, pooled_text], dim=0)
-
-                repeated_time_ids = conditioning.add_time_ids.repeat_interleave(batch_size, dim=0)
-                time_ids = torch.cat([repeated_time_ids, repeated_time_ids], dim=0)
+                pooled = torch.cat([conditioning.uncond_pooled_embeddings, conditioning.pooled_text_embeddings], dim=0)
+                time_ids = torch.cat([conditioning.add_time_ids, conditioning.add_time_ids], dim=0)
                 unet_kwargs["added_cond_kwargs"] = {"text_embeds": pooled, "time_ids": time_ids}
 
             eps = pipe.unet(model_input, t, encoder_hidden_states=encoder_hidden_states, **unet_kwargs).sample
@@ -88,29 +81,27 @@ def _sample_sd_like(
         else:
             eps_uncond_list = []
             eps_text_list = []
-            for i in range(num_views):
-                start = i * batch_size
-                end = (i + 1) * batch_size
+            for i in range(len(views)):
                 unet_kwargs: dict[str, torch.Tensor | dict[str, torch.Tensor]] = {}
                 if conditioning.add_time_ids is not None:
                     unet_kwargs["added_cond_kwargs"] = {
-                        "text_embeds": conditioning.pooled_text_embeddings[i : i + 1].repeat_interleave(batch_size, dim=0),
-                        "time_ids": conditioning.add_time_ids[i : i + 1].repeat_interleave(batch_size, dim=0),
+                        "text_embeds": conditioning.pooled_text_embeddings[i : i + 1],
+                        "time_ids": conditioning.add_time_ids[i : i + 1],
                     }
 
                 eps_uncond_list.append(
                     pipe.unet(
-                        scaled_views[start:end],
+                        scaled_views[i : i + 1],
                         t,
-                        encoder_hidden_states=conditioning.uncond_embeddings[i : i + 1].repeat_interleave(batch_size, dim=0),
+                        encoder_hidden_states=conditioning.uncond_embeddings[i : i + 1],
                         **unet_kwargs,
                     ).sample
                 )
                 eps_text_list.append(
                     pipe.unet(
-                        scaled_views[start:end],
+                        scaled_views[i : i + 1],
                         t,
-                        encoder_hidden_states=conditioning.text_embeddings[i : i + 1].repeat_interleave(batch_size, dim=0),
+                        encoder_hidden_states=conditioning.text_embeddings[i : i + 1],
                         **unet_kwargs,
                     ).sample
                 )
@@ -118,11 +109,7 @@ def _sample_sd_like(
             eps_text = torch.cat(eps_text_list, dim=0)
 
         eps_cfg = eps_uncond + config.guidance_scale * (eps_text - eps_uncond)
-        aligned_predictions = []
-        for i, view in enumerate(views):
-            start = i * batch_size
-            end = (i + 1) * batch_size
-            aligned_predictions.append(view.inverse(eps_cfg[start:end]))
+        aligned_predictions = [view.inverse(eps_cfg[i : i + 1]) for i, view in enumerate(views)]
         eps_tilde = torch.stack(aligned_predictions, dim=0).mean(dim=0)
         latents = scheduler.step(eps_tilde, t, latents).prev_sample
 
@@ -139,11 +126,9 @@ def _sample_flux(
 ) -> torch.Tensor:
     device = pipe._execution_device
     dtype = pipe.transformer.dtype
-    batch_size = config.num_images
-    num_views = len(views)
 
     latents, latent_image_ids = pipe.prepare_latents(
-        batch_size=batch_size,
+        batch_size=1,
         num_channels_latents=pipe.transformer.config.in_channels // 4,
         height=config.height,
         width=config.width,
@@ -153,44 +138,39 @@ def _sample_flux(
     )
 
     timesteps, _ = pipe.retrieve_timesteps(scheduler, num_inference_steps=config.steps, device=device, sigmas=None)
-    guidance = torch.full([batch_size * num_views], config.guidance_scale, device=device, dtype=torch.float32)
+    guidance = torch.full([1], config.guidance_scale, device=device, dtype=torch.float32)
 
     for t in tqdm(timesteps, desc="Denoising"):
         latents_unpacked = pipe._unpack_latents(latents, config.height, config.width, pipe.vae_scale_factor)
         view_latents = [view.forward(latents_unpacked) for view in views]
         packed_views = torch.cat(
-            [pipe._pack_latents(v, batch_size, v.shape[1], v.shape[2], v.shape[3]) for v in view_latents],
+            [pipe._pack_latents(v, 1, v.shape[1], v.shape[2], v.shape[3]) for v in view_latents],
             dim=0,
         )
-
-        pooled = conditioning.pooled_text_embeddings.repeat_interleave(batch_size, dim=0)
-        text = conditioning.text_embeddings.repeat_interleave(batch_size, dim=0)
 
         timestep = t.expand(packed_views.shape[0]).to(packed_views.dtype)
         noise_pred = pipe.transformer(
             hidden_states=packed_views,
             timestep=timestep / 1000,
-            guidance=guidance,
-            pooled_projections=pooled,
-            encoder_hidden_states=text,
+            guidance=guidance.expand(packed_views.shape[0]),
+            pooled_projections=conditioning.pooled_text_embeddings,
+            encoder_hidden_states=conditioning.text_embeddings,
             txt_ids=conditioning.text_ids,
             img_ids=latent_image_ids,
             joint_attention_kwargs=pipe.joint_attention_kwargs,
             return_dict=False,
         )[0]
 
-        unpacked_noise = []
-        for i in range(num_views):
-            start = i * batch_size
-            end = (i + 1) * batch_size
-            unpacked_noise.append(pipe._unpack_latents(noise_pred[start:end], config.height, config.width, pipe.vae_scale_factor))
-
+        unpacked_noise = [
+            pipe._unpack_latents(noise_pred[i : i + 1], config.height, config.width, pipe.vae_scale_factor)
+            for i in range(len(views))
+        ]
         aligned = [view.inverse(pred) for view, pred in zip(views, unpacked_noise)]
         packed_aligned = torch.cat(
-            [pipe._pack_latents(x, batch_size, x.shape[1], x.shape[2], x.shape[3]) for x in aligned],
+            [pipe._pack_latents(x, 1, x.shape[1], x.shape[2], x.shape[3]) for x in aligned],
             dim=0,
         )
-        noise_mean = packed_aligned.view(num_views, batch_size, *packed_aligned.shape[1:]).mean(dim=0)
+        noise_mean = packed_aligned.mean(dim=0, keepdim=True)
         latents = scheduler.step(noise_mean, t, latents, return_dict=False)[0]
 
     return latents
@@ -205,7 +185,7 @@ def sample_visual_anagram(
     conditioning: TextConditioning,
     generator: torch.Generator,
     config: SampleConfig,
-) -> tuple[Image.Image | list[Image.Image], list[Image.Image] | list[list[Image.Image]]]:
+) -> tuple[Image.Image, list[Image.Image]]:
     if len(views) != len(prompts):
         raise ValueError("views and prompts must have the same length")
 
@@ -214,12 +194,13 @@ def sample_visual_anagram(
         latents = pipe._unpack_latents(latents, config.height, config.width, pipe.vae_scale_factor)
         latents = (latents / pipe.vae.config.scaling_factor) + pipe.vae.config.shift_factor
         decoded = pipe.vae.decode(latents, return_dict=False)[0]
-    else:
-        latents = _sample_sd_like(pipe, scheduler, views, conditioning, generator, config)
-        decoded = _decode_latents(pipe, latents)
+        image = pipe.image_processor.postprocess(decoded, output_type="pil")[0]
+        view_images = [pipe.image_processor.postprocess(view.forward(decoded), output_type="pil")[0] for view in views]
+        return image, view_images
 
-    images = pipe.image_processor.postprocess(decoded, output_type="pil")
-    view_images = [pipe.image_processor.postprocess(view.forward(decoded), output_type="pil") for view in views]
+    latents = _sample_sd_like(pipe, scheduler, views, conditioning, generator, config)
+    decoded = _decode_latents(pipe, latents)
+    image = pipe.image_processor.postprocess(decoded, output_type="pil")[0]
 
     if config.num_images == 1:
         return images[0], [imgs[0] for imgs in view_images]

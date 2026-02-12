@@ -12,11 +12,6 @@ from diffusers import (
     StableDiffusionPipeline,
     StableDiffusionXLPipeline,
 )
-from huggingface_hub import hf_hub_download
-
-
-JUGGERNAUT_LIGHTNING_REPO = "RunDiffusion/Juggernaut-XL-Lightning"
-JUGGERNAUT_LIGHTNING_SINGLE_FILE = "Juggernaut_RunDiffusionPhoto2_Lightning_4Steps.safetensors"
 
 
 @dataclass
@@ -101,60 +96,12 @@ def resolve_model(model: str | None, preset: str, model_family: str) -> tuple[st
 
 
 def _load_pipeline_with_fallback(pipeline_cls: type[DiffusionPipeline], model_id: str, dtype: torch.dtype, **kwargs: Any) -> DiffusionPipeline:
-    attempts: list[dict[str, Any]] = [dict(kwargs)]
-
-    # Some community checkpoints only provide .bin component weights and fail when
-    # use_safetensors=True is forced.
-    if kwargs.get("use_safetensors") is True:
-        fallback_kwargs = dict(kwargs)
-        fallback_kwargs["use_safetensors"] = False
-        attempts.append(fallback_kwargs)
-
-    # Some repos keep fp16 assets under variant="fp16".
-    if dtype == torch.float16:
-        fp16_kwargs = dict(kwargs)
-        fp16_kwargs["variant"] = "fp16"
-        attempts.append(fp16_kwargs)
-
-        if kwargs.get("use_safetensors") is True:
-            fp16_fallback_kwargs = dict(fp16_kwargs)
-            fp16_fallback_kwargs["use_safetensors"] = False
-            attempts.append(fp16_fallback_kwargs)
-
-    seen: set[tuple[tuple[str, Any], ...]] = set()
-    last_error: OSError | None = None
-    for attempt_kwargs in attempts:
-        key = tuple(sorted(attempt_kwargs.items()))
-        if key in seen:
-            continue
-        seen.add(key)
-
-        try:
-            return pipeline_cls.from_pretrained(model_id, torch_dtype=dtype, **attempt_kwargs)
-        except OSError as exc:
-            last_error = exc
-            if "safetensors" not in str(exc).lower():
-                raise
-
-    if last_error is None:
-        raise RuntimeError("No pipeline loading attempts were executed")
-    raise last_error
-
-
-def _load_sdxl_pipeline(model_id: str, dtype: torch.dtype) -> StableDiffusionXLPipeline:
     try:
-        return _load_pipeline_with_fallback(
-            StableDiffusionXLPipeline,
-            model_id,
-            dtype,
-            use_safetensors=True,
-        )
+        return pipeline_cls.from_pretrained(model_id, torch_dtype=dtype, **kwargs)
     except OSError as exc:
-        if model_id != JUGGERNAUT_LIGHTNING_REPO or "safetensors" not in str(exc).lower():
+        if dtype != torch.float16 or "safetensors" not in str(exc).lower():
             raise
-
-        single_file_path = hf_hub_download(model_id, filename=JUGGERNAUT_LIGHTNING_SINGLE_FILE)
-        return StableDiffusionXLPipeline.from_single_file(single_file_path, torch_dtype=dtype)
+        return pipeline_cls.from_pretrained(model_id, torch_dtype=dtype, variant="fp16", **kwargs)
 
 
 def load_model(
@@ -167,7 +114,12 @@ def load_model(
     compile_unet: bool = False,
 ) -> ModelBundle:
     if model_family == "sdxl":
-        pipe = _load_sdxl_pipeline(model_id=model_id, dtype=dtype)
+        pipe = _load_pipeline_with_fallback(
+            StableDiffusionXLPipeline,
+            model_id,
+            dtype,
+            use_safetensors=True,
+        )
         scheduler: SchedulerMixin = DDIMScheduler.from_config(pipe.scheduler.config)
     elif model_family == "sd15":
         pipe = _load_pipeline_with_fallback(

@@ -27,7 +27,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--dtype", choices=["fp16", "fp32"], default="fp16")
-    parser.add_argument("--num_images", type=int, default=1, help="Number of images to generate in one denoising batch.")
     parser.add_argument("--batch_unet", dest="batch_unet", action="store_true", default=True, help="Batch per-view + CFG UNet calls into one forward pass (faster).")
     parser.add_argument("--no_batch_unet", dest="batch_unet", action="store_false", help="Disable batched UNet pass.")
     parser.add_argument("--attention_slicing", action="store_true", help="Lower VRAM usage at some cost to speed.")
@@ -77,7 +76,6 @@ def main() -> None:
         steps=args.steps,
         guidance_scale=args.guidance,
         batch_unet=args.batch_unet,
-        num_images=args.num_images,
     )
 
     image, transformed_views = sample_visual_anagram(
