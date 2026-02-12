@@ -4,23 +4,31 @@ from dataclasses import dataclass
 from typing import Any
 
 import torch
-from diffusers import DDIMScheduler, DiffusionPipeline, StableDiffusionPipeline, StableDiffusionXLPipeline
+from diffusers import (
+    DDIMScheduler,
+    DiffusionPipeline,
+    FluxPipeline,
+    SchedulerMixin,
+    StableDiffusionPipeline,
+    StableDiffusionXLPipeline,
+)
 
 
 @dataclass
 class ModelBundle:
     pipe: DiffusionPipeline
-    scheduler: DDIMScheduler
+    scheduler: SchedulerMixin
     model_family: str
 
 
 @dataclass
 class TextConditioning:
-    uncond_embeddings: torch.Tensor
+    uncond_embeddings: torch.Tensor | None
     text_embeddings: torch.Tensor
     uncond_pooled_embeddings: torch.Tensor | None = None
     pooled_text_embeddings: torch.Tensor | None = None
     add_time_ids: torch.Tensor | None = None
+    text_ids: torch.Tensor | None = None
 
 
 MODEL_PRESETS: dict[str, dict[str, Any]] = {
@@ -49,6 +57,16 @@ MODEL_PRESETS: dict[str, dict[str, Any]] = {
         "family": "sdxl",
         "description": "Popular SDXL fine-tune with strong aesthetics and fidelity.",
     },
+    "juggernautxl_lightning": {
+        "model_id": "RunDiffusion/Juggernaut-XL-Lightning",
+        "family": "sdxl",
+        "description": "Faster SDXL Lightning checkpoint designed for 4-8 step inference.",
+    },
+    "flux1_schnell": {
+        "model_id": "black-forest-labs/FLUX.1-schnell",
+        "family": "flux",
+        "description": "FLUX.1 [schnell] optimized for fast low-step generation.",
+    },
 }
 
 
@@ -67,32 +85,68 @@ def resolve_model(model: str | None, preset: str, model_family: str) -> tuple[st
 
     if model_family == "auto":
         model_lc = model.lower()
-        model_family = "sdxl" if "xl" in model_lc else "sd15"
+        if "flux" in model_lc:
+            model_family = "flux"
+        elif "xl" in model_lc:
+            model_family = "sdxl"
+        else:
+            model_family = "sd15"
 
     return model, model_family
 
 
-def load_model(model_id: str, device: str, dtype: torch.dtype, model_family: str) -> ModelBundle:
+def _load_pipeline_with_fallback(pipeline_cls: type[DiffusionPipeline], model_id: str, dtype: torch.dtype, **kwargs: Any) -> DiffusionPipeline:
+    try:
+        return pipeline_cls.from_pretrained(model_id, torch_dtype=dtype, **kwargs)
+    except OSError as exc:
+        if dtype != torch.float16 or "safetensors" not in str(exc).lower():
+            raise
+        return pipeline_cls.from_pretrained(model_id, torch_dtype=dtype, variant="fp16", **kwargs)
+
+
+def load_model(
+    model_id: str,
+    device: str,
+    dtype: torch.dtype,
+    model_family: str,
+    enable_attention_slicing: bool = False,
+    channels_last: bool = False,
+    compile_unet: bool = False,
+) -> ModelBundle:
     if model_family == "sdxl":
-        pipe = StableDiffusionXLPipeline.from_pretrained(
+        pipe = _load_pipeline_with_fallback(
+            StableDiffusionXLPipeline,
             model_id,
-            torch_dtype=dtype,
+            dtype,
             use_safetensors=True,
         )
+        scheduler: SchedulerMixin = DDIMScheduler.from_config(pipe.scheduler.config)
     elif model_family == "sd15":
-        pipe = StableDiffusionPipeline.from_pretrained(
+        pipe = _load_pipeline_with_fallback(
+            StableDiffusionPipeline,
             model_id,
-            torch_dtype=dtype,
+            dtype,
             safety_checker=None,
             requires_safety_checker=False,
         )
+        scheduler = DDIMScheduler.from_config(pipe.scheduler.config)
+    elif model_family == "flux":
+        pipe = _load_pipeline_with_fallback(FluxPipeline, model_id, dtype)
+        scheduler = pipe.scheduler
     else:
         raise ValueError(f"Unsupported model family: {model_family}")
 
     pipe = pipe.to(device)
-    pipe.enable_attention_slicing()
 
-    scheduler = DDIMScheduler.from_config(pipe.scheduler.config)
+    if enable_attention_slicing:
+        pipe.enable_attention_slicing()
+
+    if channels_last and hasattr(pipe, "unet"):
+        pipe.unet.to(memory_format=torch.channels_last)
+
+    if compile_unet and hasattr(pipe, "unet"):
+        pipe.unet = torch.compile(pipe.unet, mode="reduce-overhead", fullgraph=False)
+
     return ModelBundle(pipe=pipe, scheduler=scheduler, model_family=model_family)
 
 
@@ -159,6 +213,24 @@ def build_text_conditioning(
             uncond_pooled_embeddings=negative_pooled_prompt_embeds,
             pooled_text_embeddings=pooled_prompt_embeds,
             add_time_ids=add_time_ids,
+        )
+
+    if model_family == "flux":
+        if not isinstance(pipe, FluxPipeline):
+            raise TypeError("Expected a FluxPipeline for FLUX models")
+
+        prompt_embeds, pooled_prompt_embeds, text_ids = pipe.encode_prompt(
+            prompt=prompts,
+            prompt_2=prompts,
+            device=device,
+            num_images_per_prompt=1,
+            max_sequence_length=256,
+        )
+        return TextConditioning(
+            uncond_embeddings=None,
+            text_embeddings=prompt_embeds,
+            pooled_text_embeddings=pooled_prompt_embeds,
+            text_ids=text_ids,
         )
 
     raise ValueError(f"Unsupported model family: {model_family}")

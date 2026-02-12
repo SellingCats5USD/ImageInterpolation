@@ -11,7 +11,7 @@ This repository now contains a **single-GPU starter implementation** for recreat
 ## What is included
 
 - `src/views.py`: exact/invertible views (`identity`, `vflip`, `hflip`, `rot180`)
-- `src/model.py`: SD model + tokenizer/text-encoder embedding setup
+- `src/model.py`: SD/SDXL/FLUX model loading + tokenizer/text conditioning setup
 - `src/sampler.py`: multi-view denoising loop with per-view CFG + aligned averaging
 - `src/run.py`: CLI entrypoint for two-view anagrams
 - `requirements.txt`: dependencies
@@ -71,6 +71,8 @@ Available presets:
 - `realisticvision60`: `SG161222/Realistic_Vision_V6.0_B1_noVAE` (modern realistic SD1.5)
 - `sdxl`: `stabilityai/stable-diffusion-xl-base-1.0` (newer model family)
 - `juggernautxl`: `RunDiffusion/Juggernaut-XL-v9` (popular SDXL fine-tune)
+- `juggernautxl_lightning`: `RunDiffusion/Juggernaut-XL-Lightning` (optimized for ~4-8 steps)
+- `flux1_schnell`: `black-forest-labs/FLUX.1-schnell` (fast FLUX model, usually 1-4 steps)
 
 To use any custom model id directly:
 
@@ -78,6 +80,40 @@ To use any custom model id directly:
 python -m src.run --preset none --model <hf_model_id> --model_family auto ...
 ```
 
+### Inference speed-ups
+
+This repo now includes several built-in speed knobs:
+
+- **Batched per-view UNet passes (default on)** via `--batch_unet` / `--no_batch_unet`
+  - computes all view + CFG predictions in a single UNet forward per step for SD/SDXL models.
+- **`--compile_unet`** to use `torch.compile` for repeated runs.
+- **`--channels_last`** to use NHWC memory format on UNet (often faster on modern NVIDIA GPUs).
+- **`--attention_slicing`** for lower VRAM (usually slower, but helpful if memory-bound).
+
+Example fast run (Juggernaut XL Lightning):
+
+```bash
+python -m src.run \
+  --preset juggernautxl_lightning \
+  --steps 6 \
+  --guidance 4.0 \
+  --compile_unet \
+  --channels_last \
+  --prompt_a "a surreal owl made of stained glass" \
+  --prompt_b "a cinematic portrait of a boxer"
+```
+
+Example FLUX.1 schnell run:
+
+```bash
+python -m src.run \
+  --preset flux1_schnell \
+  --model_family flux \
+  --steps 4 \
+  --guidance 1.0 \
+  --prompt_a "a neon origami dragon" \
+  --prompt_b "a minimalist ceramic teapot"
+```
 
 ## Run this repo on Kaggle GPU (single codebase)
 

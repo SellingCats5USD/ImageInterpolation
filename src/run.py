@@ -14,7 +14,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate Visual Anagrams via multi-view denoising")
     parser.add_argument("--preset", choices=list(MODEL_PRESETS.keys()) + ["none"], default="sd15")
     parser.add_argument("--model", default=None, help="Override model id directly (use with --preset none).")
-    parser.add_argument("--model_family", choices=["auto", "sd15", "sdxl"], default="auto")
+    parser.add_argument("--model_family", choices=["auto", "sd15", "sdxl", "flux"], default="auto")
     parser.add_argument("--prompt_a", required=True)
     parser.add_argument("--prompt_b", required=True)
     parser.add_argument("--view_a", default="identity")
@@ -26,6 +26,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--dtype", choices=["fp16", "fp32"], default="fp16")
+    parser.add_argument("--batch_unet", dest="batch_unet", action="store_true", default=True, help="Batch per-view + CFG UNet calls into one forward pass (faster).")
+    parser.add_argument("--no_batch_unet", dest="batch_unet", action="store_false", help="Disable batched UNet pass.")
+    parser.add_argument("--attention_slicing", action="store_true", help="Lower VRAM usage at some cost to speed.")
+    parser.add_argument("--channels_last", action="store_true", help="Use channels-last memory format for UNet.")
+    parser.add_argument("--compile_unet", action="store_true", help="Use torch.compile on UNet for faster repeated inference.")
     parser.add_argument("--out", default="outputs/anagram.png")
     parser.add_argument("--out_grid", default="outputs/anagram_grid.png")
     return parser.parse_args()
@@ -39,7 +44,15 @@ def main() -> None:
     if args.device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA requested but torch.cuda.is_available() is False")
 
-    bundle = load_model(model_id=model_id, device=args.device, dtype=dtype, model_family=model_family)
+    bundle = load_model(
+        model_id=model_id,
+        device=args.device,
+        dtype=dtype,
+        model_family=model_family,
+        enable_attention_slicing=args.attention_slicing,
+        channels_last=args.channels_last,
+        compile_unet=args.compile_unet,
+    )
 
     prompts = [args.prompt_a, args.prompt_b]
     views = [get_view(args.view_a), get_view(args.view_b)]
@@ -59,6 +72,7 @@ def main() -> None:
         height=args.height,
         steps=args.steps,
         guidance_scale=args.guidance,
+        batch_unet=args.batch_unet,
     )
 
     image, transformed_views = sample_visual_anagram(
