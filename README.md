@@ -115,6 +115,34 @@ python -m src.run \
   --prompt_b "a minimalist ceramic teapot"
 ```
 
+### Batch-generate many prompt pairs
+
+Use `scripts/batch_run.py` to process prompt pairs from a file (`prompt_a ||| prompt_b`) and save all outputs:
+
+```bash
+python scripts/batch_run.py \
+  --prompt_file scripts/prompt_pairs_example.txt \
+  --count 50 \
+  --preset dreamshaper8 \
+  --steps 40 \
+  --guidance 6.5 \
+  --out_dir outputs/batch_examples
+```
+
+Notes:
+
+- Run this from the repo root (`ImageInterpolation/`), so `scripts/batch_run.py` and `scripts/prompt_pairs_example.txt` resolve correctly.
+- For a Windows output folder, pass the full path in quotes, for example:
+
+```bash
+python scripts/batch_run.py \
+  --prompt_file scripts/prompt_pairs_example.txt \
+  --count 10 \
+  --out_dir "C:\Users\norwa\OneDrive\Documents\student\prosjekter\visualAnagrams"
+```
+
+- Kaggle cannot write directly to your local `C:\...` path. If you run on Kaggle, save under `/kaggle/working/...` and then download/sync the files back to your computer.
+
 ## Run this repo on Kaggle GPU (single codebase)
 
 To avoid splitting code between local VSCode and Kaggle notebooks, use Git as the single source of truth and pull the same branch into Kaggle GPU sessions.
