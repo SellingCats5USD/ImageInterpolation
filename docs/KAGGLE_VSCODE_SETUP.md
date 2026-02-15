@@ -47,6 +47,15 @@ REPO_URL="https://github.com/<org>/<repo>.git" \
   bash scripts/kaggle_bootstrap.sh
 ```
 
+If you already cloned the repo in the session, you can rerun bootstrap without setting
+`REPO_URL`; the script will reuse `origin` automatically:
+
+```bash
+%%bash
+cd /kaggle/working/ImageInterpolation
+BRANCH="feature/my-change" bash scripts/kaggle_bootstrap.sh
+```
+
 If your repo is private, use token-auth URL format:
 
 ```text
