@@ -35,7 +35,24 @@ else
   cd "${REPO_DIR_NAME}"
 fi
 
-python -m venv .venv
+create_venv() {
+  local venv_dir="$1"
+
+  # If a previous run left behind a broken venv, recreate it.
+  if [[ -d "${venv_dir}" ]] && ! "${venv_dir}/bin/python" -m pip --version >/dev/null 2>&1; then
+    rm -rf "${venv_dir}"
+  fi
+
+  if [[ ! -d "${venv_dir}" ]]; then
+    if ! python -m venv "${venv_dir}"; then
+      echo "python -m venv failed; falling back to virtualenv bootstrap..."
+      python -m pip install --user --upgrade virtualenv
+      python -m virtualenv "${venv_dir}"
+    fi
+  fi
+}
+
+create_venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
