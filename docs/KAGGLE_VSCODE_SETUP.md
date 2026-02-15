@@ -98,6 +98,27 @@ python -m src.run \
   --out_grid outputs/campfire_oldman_grid.png
 ```
 
+Run many prompt pairs in one shot:
+
+```bash
+%%bash
+cd /kaggle/working/ImageInterpolation
+if [ -f .venv/bin/activate ]; then
+  source .venv/bin/activate
+fi
+python scripts/batch_run.py \
+  --prompt_file scripts/prompt_pairs_example.txt \
+  --count 10 \
+  --preset dreamshaper8 \
+  --steps 40 \
+  --guidance 6.5 \
+  --out_dir /kaggle/working/ImageInterpolation/outputs/batch
+```
+
+If you get `can't open file '/kaggle/working/scripts/batch_run.py'`, you are not in the repo root. Run `cd /kaggle/working/ImageInterpolation` first.
+
+Important: Kaggle cannot output directly to a local Windows path such as `C:\Users\norwa\OneDrive\Documents\student\prosjekter\visualAnagrams`. For that exact folder, run the batch command on your own Windows machine (or download Kaggle outputs afterward).
+
 ## 5) Keep local + Kaggle in sync (day-to-day)
 
 Use this loop:
