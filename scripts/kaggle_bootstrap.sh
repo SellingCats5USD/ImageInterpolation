@@ -17,20 +17,40 @@ REPO_URL="${REPO_URL:-}"
 BRANCH="${BRANCH:-main}"
 REPO_DIR_NAME="${REPO_DIR_NAME:-ImageInterpolation}"
 
-if [[ -z "${REPO_URL}" ]]; then
-  echo "REPO_URL is required, e.g. REPO_URL=https://github.com/<org>/<repo>.git"
-  exit 1
-fi
+validate_repo_url() {
+  local repo_url="$1"
+  if [[ "${repo_url}" == *"<org>"* ]] || [[ "${repo_url}" == *"<repo>"* ]]; then
+    echo "REPO_URL still contains placeholders. Replace <org>/<repo>, e.g. REPO_URL=https://github.com/my-org/ImageInterpolation.git"
+    exit 1
+  fi
+}
 
 cd "${WORKDIR}"
 
 if [[ -d "${REPO_DIR_NAME}/.git" ]]; then
+  if [[ -z "${REPO_URL}" ]]; then
+    REPO_URL="$(git -C "${REPO_DIR_NAME}" remote get-url origin 2>/dev/null || true)"
+  fi
+
+  if [[ -z "${REPO_URL}" ]]; then
+    echo "REPO_URL is required when ${REPO_DIR_NAME} has no origin remote configured."
+    exit 1
+  fi
+  validate_repo_url "${REPO_URL}"
+
   echo "Repo already exists, syncing latest ${BRANCH}..."
   cd "${REPO_DIR_NAME}"
+  git remote set-url origin "${REPO_URL}"
   git fetch --all --prune
   git checkout "${BRANCH}"
   git pull --ff-only origin "${BRANCH}"
 else
+  if [[ -z "${REPO_URL}" ]]; then
+    echo "REPO_URL is required, e.g. REPO_URL=https://github.com/my-org/ImageInterpolation.git"
+    exit 1
+  fi
+  validate_repo_url "${REPO_URL}"
+
   git clone --branch "${BRANCH}" "${REPO_URL}" "${REPO_DIR_NAME}"
   cd "${REPO_DIR_NAME}"
 fi
