@@ -140,3 +140,7 @@ For VSCode ↔ Kaggle Jupyter Server connection details, follow Kaggle docs: htt
 - Start with `512x512`, then experiment with prompts and seeds.
 - If one view dominates, reduce guidance or simplify prompts.
 - SDXL typically benefits from larger resolutions and often lower guidance than SD1.5.
+
+### Troubleshooting
+
+- If Python prints `Error in sitecustomize ... ModuleNotFoundError: No module named 'wrapt'`, your environment is loading a `sitecustomize` hook that depends on `wrapt`. This repo now includes `wrapt` in `requirements.txt`; re-run `pip install -r requirements.txt` in your active environment.

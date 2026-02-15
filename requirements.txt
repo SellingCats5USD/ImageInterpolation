@@ -10,5 +10,6 @@ matplotlib
 einops
 xformers
 pyyaml
+wrapt
 
 pytest
