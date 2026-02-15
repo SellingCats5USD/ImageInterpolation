@@ -19,6 +19,7 @@ class SampleConfig:
     height: int = 512
     steps: int = 50
     guidance_scale: float = 7.5
+    num_images: int = 1
     batch_unet: bool = True
 
 
