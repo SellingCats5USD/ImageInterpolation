@@ -186,7 +186,7 @@ def sample_visual_anagram(
     conditioning: TextConditioning,
     generator: torch.Generator,
     config: SampleConfig,
-) -> tuple[Image.Image, list[Image.Image]]:
+) -> tuple[Image.Image, list[Image.Image]] | tuple[list[Image.Image], list[list[Image.Image]]]:
     if len(views) != len(prompts):
         raise ValueError("views and prompts must have the same length")
 
@@ -201,7 +201,8 @@ def sample_visual_anagram(
 
     latents = _sample_sd_like(pipe, scheduler, views, conditioning, generator, config)
     decoded = _decode_latents(pipe, latents)
-    image = pipe.image_processor.postprocess(decoded, output_type="pil")[0]
+    images = pipe.image_processor.postprocess(decoded, output_type="pil")
+    view_images = [pipe.image_processor.postprocess(view.forward(decoded), output_type="pil") for view in views]
 
     if config.num_images == 1:
         return images[0], [imgs[0] for imgs in view_images]
