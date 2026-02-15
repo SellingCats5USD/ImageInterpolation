@@ -22,6 +22,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--view_b", default="vflip")
     parser.add_argument("--steps", type=int, default=50)
     parser.add_argument("--guidance", type=float, default=7.5)
+    parser.add_argument("--num_images", type=int, default=1)
     parser.add_argument("--width", type=int, default=512)
     parser.add_argument("--height", type=int, default=512)
     parser.add_argument("--seed", type=int, default=42)
@@ -75,6 +76,7 @@ def main() -> None:
         height=args.height,
         steps=args.steps,
         guidance_scale=args.guidance,
+        num_images=args.num_images,
         batch_unet=args.batch_unet,
     )
 
