@@ -17,6 +17,10 @@ REPO_URL="${REPO_URL:-}"
 BRANCH="${BRANCH:-main}"
 REPO_DIR_NAME="${REPO_DIR_NAME:-ImageInterpolation}"
 
+is_kaggle() {
+  [[ -n "${KAGGLE_URL_BASE:-}" ]] || [[ -d /kaggle ]]
+}
+
 validate_repo_url() {
   local repo_url="$1"
   if [[ "${repo_url}" == *"<org>"* ]] || [[ "${repo_url}" == *"<repo>"* ]]; then
@@ -57,17 +61,40 @@ fi
 
 create_venv() {
   local venv_dir="$1"
+  local use_system_site_packages=0
+
+  if is_kaggle; then
+    # Kaggle images already ship heavy ML packages (like torch). Reuse them.
+    use_system_site_packages=1
+  fi
 
   # If a previous run left behind a broken venv, recreate it.
   if [[ -d "${venv_dir}" ]] && ! "${venv_dir}/bin/python" -m pip --version >/dev/null 2>&1; then
     rm -rf "${venv_dir}"
   fi
 
+  # If this venv was created without system site-packages on Kaggle, recreate it.
+  if [[ -d "${venv_dir}" ]] && [[ "${use_system_site_packages}" -eq 1 ]]; then
+    if [[ ! -f "${venv_dir}/pyvenv.cfg" ]] || ! grep -Eq '^include-system-site-packages = true$' "${venv_dir}/pyvenv.cfg"; then
+      echo "Recreating ${venv_dir} with --system-site-packages for Kaggle..."
+      rm -rf "${venv_dir}"
+    fi
+  fi
+
   if [[ ! -d "${venv_dir}" ]]; then
-    if ! python -m venv "${venv_dir}"; then
+    local -a venv_args=()
+    if [[ "${use_system_site_packages}" -eq 1 ]]; then
+      venv_args+=(--system-site-packages)
+    fi
+
+    if ! python -m venv "${venv_args[@]}" "${venv_dir}"; then
       echo "python -m venv failed; falling back to virtualenv bootstrap..."
       python -m pip install --user --upgrade virtualenv
-      python -m virtualenv "${venv_dir}"
+      if [[ "${use_system_site_packages}" -eq 1 ]]; then
+        python -m virtualenv --system-site-packages "${venv_dir}"
+      else
+        python -m virtualenv "${venv_dir}"
+      fi
     fi
   fi
 }

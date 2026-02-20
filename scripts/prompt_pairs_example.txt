@@ -1,31 +1,31 @@
 # One pair per line, using: prompt_a ||| prompt_b
-an oil painting of a happy garden picnic beneath blooming cherry trees ||| an oil painting of a scary forest where twisted pines hide glowing eyes
-an oil painting of children chasing butterflies through a sunny rose garden ||| an oil painting of a scary forest path covered in claw-marked bark
-an impressionist oil painting of a cheerful cottage garden with singing birds ||| an impressionist oil painting of a scary forest swamp under a blood-red moon
-an oil painting of a joyful botanical garden with fountains and tulips ||| an oil painting of a scary forest of dead oaks and drifting fog
-an oil painting of a bright spring garden party with pastel lanterns ||| an oil painting of a scary forest clearing filled with abandoned masks
-an oil painting of a tranquil garden maze lined with lavender ||| an oil painting of a scary forest maze of thorny branches and shadows
-an oil painting of a whimsical garden full of gnomes and daisies ||| an oil painting of a scary forest where root-like hands rise from the soil
-an oil painting of a peaceful herb garden at golden hour ||| an oil painting of a scary forest at dusk with crows circling overhead
-an oil painting of a romantic garden wedding under flowering arches ||| an oil painting of a scary forest wedding ruin wrapped in black vines
-an oil painting of a lively garden tea table with sunlit peonies ||| an oil painting of a scary forest table set for no one among skeletal trees
-an oil painting of a cheerful garden pond with koi and water lilies ||| an oil painting of a scary forest pond with black water and pale reflections
-an oil painting of a bright garden greenhouse overflowing with orchids ||| an oil painting of a scary forest greenhouse shattered and reclaimed by thorns
-an oil painting of a happy vegetable garden with pumpkins and marigolds ||| an oil painting of a scary forest field of rotting gourds and raven nests
-an oil painting of a sun-drenched garden terrace with climbing roses ||| an oil painting of a scary forest terrace cracked by roots and moonlit mist
-an oil painting of a playful garden with painted benches and wind chimes ||| an oil painting of a scary forest with broken benches and hanging charms
-an oil painting of a dreamy Monet-style garden bridge over a clear stream ||| an oil painting of a scary forest bridge over a dark stream of drifting ash
-an oil painting of a festive midsummer garden dance with flower crowns ||| an oil painting of a scary forest dance of faceless figures between pines
-an oil painting of a calm monastery garden with white blossoms ||| an oil painting of a scary forest monastery swallowed by ancient trees
-an oil painting of a radiant garden courtyard with citrus trees ||| an oil painting of a scary forest courtyard where statues are overgrown and cracked
-an oil painting of a joyful rooftop garden with colorful planters ||| an oil painting of a scary forest rooftop overtaken by black ivy and ravens
-an oil painting of a warm countryside garden with sunflowers and bees ||| an oil painting of a scary forest edge where sunflowers turn to thorned stalks
-an oil painting of a serene Japanese garden with koi and maple leaves ||| an oil painting of a scary forest shrine hidden beneath twisted maples
-an oil painting of a happy garden full of butterflies and blooming irises ||| an oil painting of a scary forest full of moths and withered irises
-an oil painting of a cheerful palace garden with marble fountains ||| an oil painting of a scary forest palace ruin drowned in roots and darkness
-an oil painting of a bright garden path lined with hydrangeas ||| an oil painting of a scary forest path lined with wilted hydrangeas and bones
-an oil painting of a playful garden carousel surrounded by flowers ||| an oil painting of a scary forest carousel rusting among haunted trees
-an oil painting of a blissful moonlit garden with fireflies and jasmine ||| an oil painting of a scary forest moonlit by cold light and drifting spirits
-an oil painting of a happy community garden with colorful bunting ||| an oil painting of a scary forest camp with torn bunting and dying embers
-an oil painting of a vibrant garden festival with ribbons and blossoms ||| an oil painting of a scary forest festival abandoned in heavy fog
-an oil painting of a gentle garden at dawn with dew-covered roses ||| an oil painting of a scary forest at dawn where the roses are black and thorned
+an oil painting of grinning skulls in vintage clothes having a garden picnic beneath blooming cherry trees, their empty sockets lit with warm candlelight ||| an oil painting of a towering pine-faced monster in a scary forest where twisted pines hide its many glowing eyes
+an oil painting of bone-masked children chasing butterflies through a sunny rose garden, their laughter painted as drifting mist ||| an oil painting of a claw-handed stag demon guiding a scary forest path, its antlers scraping bark carved with fresh claw-marks
+an impressionist oil painting of a cheerful cottage garden haunted by a smiling scarecrow with a skull for a head and birds perched like omens ||| an impressionist oil painting of a swamp-witch made of mud and roots in a scary forest swamp under a blood-red moon
+an oil painting of a joyful botanical garden watched by a marble fountain statue that has come alive as a cracked stone skull-king ||| an oil painting of a gaunt, personified fog-beast stalking a scary forest of dead oaks, its ribs made of drifting mist
+an oil painting of a bright spring garden party where pastel lanterns wear tiny screaming faces and dance around a friendly-looking skull host ||| an oil painting of a masked bone-jester standing in a scary forest clearing filled with abandoned masks that whisper
+an oil painting of a tranquil garden maze where a polite skeleton gardener offers directions with a rusted shears in hand ||| an oil painting of a shadow-made minotaur prowling a scary forest maze of thorny branches, its breath forming moving silhouettes
+an oil painting of a whimsical garden full of gnomes—each one a stitched doll with a skull-button smile—among daisies that look like eyes ||| an oil painting of a root-giant in a scary forest where personified hands of wood rise from the soil to grab passing light
+an oil painting of a peaceful herb garden at golden hour with a hooded skull apothecary gently sorting jars of glowing leaves ||| an oil painting of a crow-crowned phantom in a scary forest at dusk, circling overhead like a living omen
+an oil painting of a romantic garden wedding led by a skull-faced bride and groom beneath flowering arches, petals falling like ash ||| an oil painting of a vine-wrapped revenant officiating a scary forest wedding ruin, black vines binding empty pews
+an oil painting of a lively garden tea table hosted by a porcelain doll with a cracked skull grin, sunlit peonies framing the scene ||| an oil painting of a hungry table-spirit in a scary forest, the table set for no one among skeletal trees that lean closer
+an oil painting of a cheerful garden pond where a bone-mermaid smiles beneath koi and water lilies, ripples shaped like runes ||| an oil painting of a pale mirror-wraith rising from a scary forest pond of black water, reflections turning into faces
+an oil painting of a bright greenhouse overflowing with orchids, guarded by a gentle plant-golem with a skull carved into its bark ||| an oil painting of a thorn-wrapped monster lurking in a scary forest greenhouse, shattered glass reflecting too many eyes
+an oil painting of a happy vegetable garden where a pumpkin-headed skeleton farmer tends marigolds with a rusty hoe ||| an oil painting of a carrion scarecrow king watching a scary forest field of rotting gourds and raven nests
+an oil painting of a sun-drenched garden terrace where a smiling stone gargoyle with a skull visage lounges among climbing roses ||| an oil painting of a moonlit root-devil cracking a scary forest terrace apart, mist pouring from its ribcage
+an oil painting of a playful garden with painted benches where wind chimes are tiny bones tinkling as a friendly ghost sits nearby ||| an oil painting of a charm-hung specter in a scary forest with broken benches and dangling talismans that twitch
+an oil painting of a dreamy Monet-style garden bridge where a skull-masked wanderer pauses above a clear stream, lilies like little moons ||| an oil painting of an ash-river ferryman—skeletal and cloaked—standing on a scary forest bridge over a dark stream of drifting ash
+an oil painting of a festive midsummer garden dance led by an antlered skeleton wearing a flower crown, ribbons swirling like spirits ||| an oil painting of a ringmaster wraith conducting a scary forest dance of faceless figures between pines
+an oil painting of a calm monastery garden where a hooded skull monk tends white blossoms with careful, solemn hands ||| an oil painting of an ancient tree-colossus swallowing a scary forest monastery, its bark shaped like praying faces
+an oil painting of a radiant garden courtyard with citrus trees, haunted by a cracked statue that has become a stone skull sentinel ||| an oil painting of a statue-eater monster in a scary forest courtyard, overgrowth crawling over shattered faces
+an oil painting of a joyful rooftop garden where a bat-winged gargoyle with a skull grin waters colorful planters at sunset ||| an oil painting of a raven-herald demon on a scary forest rooftop overtaken by black ivy, its shadow moving independently
+an oil painting of a warm countryside garden with sunflowers and bees, watched by a straw golem with a skull lantern for a head ||| an oil painting of a thorned sunflower-horror at a scary forest edge, stalks bending toward it like worshippers
+an oil painting of a serene Japanese garden where a skull-faced kitsune spirit sits by koi and drifting maple leaves ||| an oil painting of a shrine-keeper yokai in a scary forest shrine hidden beneath twisted maples, lantern-light like cold fire
+an oil painting of a happy garden full of butterflies and blooming irises, with a smiling skull child reaching out gently ||| an oil painting of a moth-queen monster in a scary forest full of moths and withered irises, wings like torn velvet
+an oil painting of a cheerful palace garden with marble fountains, ruled by a crowned skeleton noble in embroidered robes ||| an oil painting of a root-drowned tyrant haunting a scary forest palace ruin, darkness pooling where halls used to be
+an oil painting of a bright garden path lined with hydrangeas, where a skeletal pilgrim carries a bouquet like an offering ||| an oil painting of a bone-hound pack trailing a scary forest path lined with wilted hydrangeas and scattered ribs
+an oil painting of a playful garden carousel where each horse is a carved skull-beast, spinning among flowers with eerie delight ||| an oil painting of a rusted carousel spirit in a scary forest, its painted faces peeling into silent screams
+an oil painting of a blissful moonlit garden where fireflies orbit a gentle ghost with a skull mask, jasmine drifting like smoke ||| an oil painting of a cold-lantern wraith in a scary forest moonlit by icy light, spirits drifting like shredded cloth
+an oil painting of a happy community garden with colorful bunting, hosted by a friendly skeleton mayor handing out seed packets ||| an oil painting of a camp-phantom in a scary forest, torn bunting fluttering above dying embers that spell names
+an oil painting of a vibrant garden festival with ribbons and blossoms, featuring a grinning bone-jester juggling glowing lantern skulls ||| an oil painting of a fog-devourer monster in a scary forest festival abandoned in heavy mist, stalls breathing softly
+an oil painting of a gentle garden at dawn with dew-covered roses, watched by a quiet skull-faced gardener whose shadow moves late ||| an oil painting of a dawn-stalking thorn demon in a scary forest where the roses are black, their thorns shaped like teeth
